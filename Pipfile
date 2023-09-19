@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 opencv-python = "~=4.8.0"
 dlib = "~=19.24"
+imutils = "~=0.5"
+keyboard = "~=0.13"
 
 [dev-packages]
 
