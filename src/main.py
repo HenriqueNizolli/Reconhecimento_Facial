@@ -1,6 +1,7 @@
 # Imports
 import cv2
 import keyboard
+import face_recognition
 
 # Iniciando a camera
 cam = cv2.VideoCapture(0)
