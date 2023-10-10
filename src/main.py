@@ -6,6 +6,7 @@ import numpy as np
 
 #my imports
 import encoder
+import utils
 
 #database faces
 db_faces = encoder.list_imgs('../assets/img')
@@ -39,8 +40,9 @@ while True:
         print(gg)
 
         if match[gg]:
-            for x, y, w, h in faces:
-                cv2.rectangle(frame, (y, x), (h, w), (0, 255, 0), 2)
+            frame = utils.drawRectagle(frame, faces, (0, 255, 0))
+        else:
+            frame = utils.drawRectagle(frame, faces, (0, 0, 255))
 
     cv2.imshow('img', frame)
     cv2.waitKey(1)
