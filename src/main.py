@@ -9,9 +9,8 @@ import encoder
 import utils
 
 #database faces
-db_faces = encoder.list_imgs('../assets/img')
+db_faces, db_ids = encoder.list_imgs('../assets/img')
 db_enc = encoder.encoding_imgs(db_faces)
-print(db_faces)
 
 # Iniciando a camera
 cam = cv2.VideoCapture(0)
@@ -25,24 +24,22 @@ while True:
         print("Shutdown.....")
         break
 
-    frame = cv2.flip(frame, 1)
-    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_recognition.face_locations(gray_frame)
+    faces = face_recognition.face_locations(frame)
     enc_faces = face_recognition.face_encodings(frame, faces)
 
-    for enc, loc in zip(enc_faces, faces):
-        match = face_recognition.compare_faces(db_enc, enc)
-        dis = face_recognition.face_distance(db_enc, enc)
-        gg = np.argmin(dis)
+    if faces:
+        for enc, face_location in zip(enc_faces, faces):
+            face_matchs = face_recognition.compare_faces(db_enc, enc)
+            face_distances = face_recognition.face_distance(db_enc, enc)
+            face_index = np.argmin(face_distances)
 
-        print(match)
-        print(dis)
-        print(gg)
+            if face_matchs[face_index]:
+                frame = utils.drawRectagle(frame, face_location, (0, 255, 0))
+                frame = utils.writeOnImg(frame, face_location, db_ids[face_index], (0, 255, 0))
 
-        if match[gg]:
-            frame = utils.drawRectagle(frame, faces, (0, 255, 0))
-        else:
-            frame = utils.drawRectagle(frame, faces, (0, 0, 255))
+            else:
+                frame = utils.drawRectagle(frame, face_location, (0, 0, 255))
+                frame = utils.writeOnImg(frame, face_location, 'unknown', (0, 0, 255))
 
     cv2.imshow('img', frame)
     cv2.waitKey(1)
