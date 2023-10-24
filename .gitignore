@@ -3,3 +3,4 @@
 /assets/img
 
 Pipfile.lock
+.env

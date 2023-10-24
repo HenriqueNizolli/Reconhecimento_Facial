@@ -1,15 +1,21 @@
+import os
 import sys
 import cv2
 import time
+import dlib
 import utils
 import encoder
-import keyboard
 import numpy as np
 import face_recognition
+from dotenv import load_dotenv
+
+
+load_dotenv()
+print("GPU Enable: " + str(dlib.DLIB_USE_CUDA))
 
 print("Load Faces :")
 print("[Start]")
-db_faces, db_ids = encoder.list_images('../assets/img')
+db_faces, db_ids = encoder.list_images(os.getenv("IMGS_PATH"))
 db_enc = encoder.encoding_image(db_faces)
 print("[Done]")
 
@@ -20,9 +26,9 @@ if len(db_enc) == 0:
 
 print("Starting Camera :")
 print("[Start]")
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+cam = cv2.VideoCapture(int(os.getenv("CAMERA_ID")))
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, float(os.getenv("INPUT_WIDTH")))
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, float(os.getenv("INPUT_HIGHT")))
 print("[Done]")
 
 print("Star Program :")
@@ -31,13 +37,14 @@ while True:
     start = time.time()
     isRead, frame = cam.read()
 
-    if (not isRead) or (keyboard.is_pressed('Esc')):
+    if not isRead:
         end = time.time()
         print(end - start)
         print("[Done]")
         print("Shutdown.....")
         break
 
+    frame = cv2.flip(frame, 1)
     frame = cv2.medianBlur(frame, 3)
 
     faces = face_recognition.face_locations(frame)
