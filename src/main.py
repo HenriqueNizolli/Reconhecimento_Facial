@@ -28,11 +28,14 @@ print("Starting Camera :")
 print("[Start]")
 cam = cv2.VideoCapture(int(os.getenv("CAMERA_ID")))
 cam.set(cv2.CAP_PROP_FRAME_WIDTH, float(os.getenv("INPUT_WIDTH")))
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, float(os.getenv("INPUT_HIGHT")))
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, float(os.getenv("INPUT_HEIGHT")))
 print("[Done]")
 
-print("Star Program :")
+print("Start Program :")
 print("[Start]")
+rotation = int(os.getenv("ROTATION"))
+kernel_size = int(os.getenv("KERNEL_SIZE"))
+new_resolution = (int(os.getenv("NEW_WIDTH")), int(os.getenv("NEW_HEIGHT")))
 while True:
     start = time.time()
     isRead, frame = cam.read()
@@ -44,8 +47,9 @@ while True:
         print("Shutdown.....")
         break
 
-    frame = cv2.flip(frame, 1)
-    frame = cv2.medianBlur(frame, 3)
+    frame = cv2.flip(frame, rotation)
+    frame = cv2.medianBlur(frame, kernel_size)
+    frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_LANCZOS4)
 
     faces = face_recognition.face_locations(frame)
     enc_faces = face_recognition.face_encodings(frame, faces)
