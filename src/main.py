@@ -56,7 +56,7 @@ while True:
 
     if faces:
         for enc, face_location in zip(enc_faces, faces):
-            face_match = face_recognition.compare_faces(db_enc, enc)
+            face_match = face_recognition.compare_faces(db_enc, enc, tolerance=0.5)
             face_distances = face_recognition.face_distance(db_enc, enc)
             face_index = np.argmin(face_distances)
 
