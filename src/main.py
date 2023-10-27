@@ -1,51 +1,81 @@
-# Imports
+import os
+import sys
 import cv2
-import keyboard
-import face_recognition
-import numpy as np
-
-#my imports
-import encoder
+import time
+import dlib
 import utils
+import encoder
+import numpy as np
+import face_recognition
+from dotenv import load_dotenv
 
-#database faces
-db_faces, db_ids = encoder.list_imgs('../assets/img')
-db_enc = encoder.encoding_imgs(db_faces)
 
-# Iniciando a camera
-cam = cv2.VideoCapture(0)
-cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+load_dotenv()
+print("GPU Enable: " + str(dlib.DLIB_USE_CUDA))
 
+print("Load Faces :")
+print("[Start]")
+db_faces, db_ids = encoder.list_images(os.getenv("IMGS_PATH"))
+db_enc = encoder.encoding_image(db_faces)
+print("[Done]")
+
+if len(db_enc) == 0:
+    print("Image not found")
+    print("Shutdown.....")
+    sys.exit()
+
+print("Starting Camera :")
+print("[Start]")
+cam = cv2.VideoCapture(int(os.getenv("CAMERA_ID")))
+cam.set(cv2.CAP_PROP_FRAME_WIDTH, float(os.getenv("INPUT_WIDTH")))
+cam.set(cv2.CAP_PROP_FRAME_HEIGHT, float(os.getenv("INPUT_HEIGHT")))
+print("[Done]")
+
+print("Start Program :")
+print("[Start]")
+rotation = int(os.getenv("ROTATION"))
+kernel_size = int(os.getenv("KERNEL_SIZE"))
+new_resolution = (int(os.getenv("NEW_WIDTH")), int(os.getenv("NEW_HEIGHT")))
 while True:
+    start = time.time()
     isRead, frame = cam.read()
 
-    if (not isRead) or (keyboard.is_pressed('Esc')):
+    if not isRead:
+        end = time.time()
+        print(end - start)
+        print("[Done]")
         print("Shutdown.....")
         break
+
+    frame = cv2.flip(frame, rotation)
+    frame = cv2.medianBlur(frame, kernel_size)
+    frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_LANCZOS4)
 
     faces = face_recognition.face_locations(frame)
     enc_faces = face_recognition.face_encodings(frame, faces)
 
     if faces:
         for enc, face_location in zip(enc_faces, faces):
-            face_matchs = face_recognition.compare_faces(db_enc, enc)
+            face_match = face_recognition.compare_faces(db_enc, enc, tolerance=0.5)
             face_distances = face_recognition.face_distance(db_enc, enc)
             face_index = np.argmin(face_distances)
 
-            if face_matchs[face_index]:
-                frame = utils.drawRectagle(frame, face_location, (0, 255, 0))
-                frame = utils.writeOnImg(frame, face_location, db_ids[face_index], (0, 255, 0))
+            if face_match[face_index]:
+                frame = utils.draw_rectangle(frame, face_location, (0, 255, 0))
+                frame = utils.write_on_image(frame, face_location, db_ids[face_index], (0, 255, 0))
 
             else:
-                frame = utils.drawRectagle(frame, face_location, (0, 0, 255))
-                frame = utils.writeOnImg(frame, face_location, 'unknown', (0, 0, 255))
+                frame = utils.draw_rectangle(frame, face_location, (0, 0, 255))
+                frame = utils.write_on_image(frame, face_location, 'unknown', (0, 0, 255))
 
     cv2.imshow('img', frame)
     cv2.waitKey(1)
 
-# Liberando a camera
+    end = time.time()
+    print(end - start)
+
+# Releasing the camera
 cam.release()
 
-# Fechando todas as janelas
+# close all windows
 cv2.destroyAllWindows()
